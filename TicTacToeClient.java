@@ -32,9 +32,10 @@ public class TicTacToeClient {
 
             //Gets the board
             BoardMessage bm = (BoardMessage) isob.readObject();
+            ErrorMessage er = null;
 
             //Loop until the game is over
-            while(bm.getStatus() == BoardMessage.Status.IN_PROGRESS)
+            while(bm.getStatus() == BoardMessage.Status.IN_PROGRESS && er == null)
             {
                     System.out.println("Board layout is a 3x3 square with choices 0-2, starting from the top left and ending at the bottom right");
 
@@ -54,10 +55,11 @@ public class TicTacToeClient {
 
                         if (input.equals("s")) {
                             System.out.println("You have surrendered, now exiting...");
-                            CommandMessage er = new CommandMessage(CommandMessage.Command.SURRENDER);
-                            osob.writeObject(er);
+                            CommandMessage cmer = new CommandMessage(CommandMessage.Command.SURRENDER);
+                            osob.writeObject(cmer);
+                            er = (ErrorMessage) isob.readObject();
                             valid = true;
-                            break;
+                            continue;
                         }
 
                         System.out.println("Enter a position: ");
@@ -71,18 +73,19 @@ public class TicTacToeClient {
                             System.out.println("Invalid position(s) " + r + "," + c);
                         } else {
                             System.out.println(r + " " + c);
+                            //Sends the move to server
+                            osob.writeObject(new MoveMessage((byte) r, (byte) c));
+
+                            //gets new board
+                            bm = (BoardMessage) isob.readObject();
                             valid = true;
                         }
                     }
 
-                    //Sends the move to server
-                    osob.writeObject(new MoveMessage((byte) r, (byte) c));
-
-                    //gets new board
-                    bm = (BoardMessage) isob.readObject();
-
                     //checking board status
                 if (bm.getStatus() != BoardMessage.Status.IN_PROGRESS) {
+                        temp = bm.getBoard();
+                        getGameLayout(temp);
                     if (bm.getStatus() == BoardMessage.Status.ERROR) {
                         System.out.println("error, exiting...");
                         continue;
