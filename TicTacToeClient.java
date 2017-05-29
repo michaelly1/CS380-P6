@@ -9,6 +9,7 @@ public class TicTacToeClient {
     public static void main(String[] args)
     {
         try{
+			
             Socket socket = new Socket("codebank.xyz", 38006);
 
             InputStream is = socket.getInputStream();
